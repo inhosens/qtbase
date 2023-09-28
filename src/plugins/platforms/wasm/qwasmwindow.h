@@ -35,6 +35,8 @@ struct PointerEvent;
 class QWasmDeadKeySupport;
 struct WheelEvent;
 
+Q_DECLARE_LOGGING_CATEGORY(qLcQpaWasmInputContext)
+
 class QWasmWindow final : public QPlatformWindow,
                           public QWasmWindowTreeNode,
                           public QNativeInterface::Private::QWasmWindow
@@ -122,6 +124,7 @@ private:
     void commitParent(QWasmWindowTreeNode *parent);
 
     bool processKey(const KeyEvent &event);
+    bool processKeyForInputContext(const KeyEvent &event);
     bool processPointer(const PointerEvent &event);
     bool processWheel(const WheelEvent &event);
 
