@@ -63,7 +63,7 @@
         }
     }
 
-    if (queryInputMethod(self.focusObject)) {
+    if (queryInputMethod(m_composingFocusObject)) {
         QInputMethodEvent inputMethodEvent;
 
         const bool isAttributedString = [text isKindOfClass:NSAttributedString.class];
@@ -85,7 +85,7 @@
             inputMethodEvent.setCommitString(commitString, replaceFrom, replaceLength);
         }
 
-        QCoreApplication::sendEvent(self.focusObject, &inputMethodEvent);
+        QCoreApplication::sendEvent(m_composingFocusObject, &inputMethodEvent);
     }
 
     m_composingText.clear();
@@ -287,6 +287,11 @@
     return !m_composingText.isEmpty();
 }
 
+- (BOOL)hasOnlyDeadKeyComposition
+{
+    return m_lastKeyDead && m_composingText.length() == 1;
+}
+
 /*
     Returns the range of marked text or {cursorPosition, 0} if there's none.
 
@@ -332,11 +337,10 @@
         << "for focus object" << m_composingFocusObject;
 
     if (!m_composingText.isEmpty()) {
-        QObject *focusObject = self.focusObject;
-        if (queryInputMethod(focusObject)) {
+        if (queryInputMethod(m_composingFocusObject)) {
             QInputMethodEvent e;
             e.setCommitString(m_composingText);
-            QCoreApplication::sendEvent(focusObject, &e);
+            QCoreApplication::sendEvent(m_composingFocusObject, &e);
         }
     }
 

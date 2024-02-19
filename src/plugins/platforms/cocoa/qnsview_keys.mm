@@ -78,13 +78,23 @@ static bool sendAsShortcut(const KeyEvent &keyEvent, QWindow *window)
     bool didInterpretKeyEvent = false;
 
     if (keyEvent.type == QEvent::KeyPress) {
+        // If the current focus object is different from the
+        // previous one and there is preedit for the previous
+        // focusObject, it will be committed before processing
+        // current key.
+        QObject *focusObject = m_platformWindow ? m_platformWindow->window()->focusObject() : nullptr;
+        if (!m_composingText.isEmpty() && m_composingFocusObject && m_composingFocusObject != focusObject) {
+            [self unmarkText];
+            if (NSTextInputContext *ctxt = [NSTextInputContext currentInputContext]) {
+                [ctxt discardMarkedText];
+            }
+        }
 
         if (m_composingText.isEmpty()) {
             if (sendAsShortcut(keyEvent, window))
                 return true;
         }
 
-        QObject *focusObject = m_platformWindow ? m_platformWindow->window()->focusObject() : nullptr;
         if (m_sendKeyEvent && focusObject) {
             if (auto queryResult = queryInputMethod(focusObject, Qt::ImHints)) {
                 auto hints = static_cast<Qt::InputMethodHints>(queryResult.value(Qt::ImHints).toUInt());

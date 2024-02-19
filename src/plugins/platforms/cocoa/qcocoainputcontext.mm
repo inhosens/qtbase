@@ -60,36 +60,20 @@ QCocoaInputContext::~QCocoaInputContext()
 }
 
 /*!
-    Commits the current composition if there is one,
-    by "unmarking" the text in the edit buffer, and
-    informing the system input context of this fact.
+    Normally it is called from QEvent::FocusAboutToChange
+    and was supposed to commit existing preedits but
+    macos has a little different functions.
+    Even if the focus is changed, the preedit can be managed
+    by the system. (for examples, conversion between Hiragana
+    and Katakana in Japanese)
+
+    Qt does not do anything here.
+    Instead, handleMouseEvent processes some commits
+    for cases changing focus inside a object.
 */
 void QCocoaInputContext::commit()
 {
-    qCDebug(lcQpaInputMethods) << "Committing composition";
-
-    if (!m_focusWindow)
-        return;
-
-    auto *platformWindow = m_focusWindow->handle();
-    if (!platformWindow)
-        return;
-
-    auto *cocoaWindow = static_cast<QCocoaWindow *>(platformWindow);
-    QNSView *view = qnsview_cast(cocoaWindow->view());
-    if (!view)
-        return;
-
-    [view unmarkText];
-
-    [view.inputContext discardMarkedText];
-    if (view.inputContext != NSTextInputContext.currentInputContext) {
-        // discardMarkedText will activate the TSM document of the given input context,
-        // which may not match the current input context. To ensure the current input
-        // context is not left in an inconsistent state with a deactivated document
-        // we need to manually activate it here.
-        [NSTextInputContext.currentInputContext activate];
-    }
+    qCDebug(lcQpaInputMethods) << Q_FUNC_INFO << "Do nothing!";
 }
 
 
@@ -129,9 +113,19 @@ void QCocoaInputContext::setFocusObject(QObject *focusObject)
         if (!view)
             return;
 
-        if (NSTextInputContext *ctxt = [NSTextInputContext currentInputContext]) {
+        if (NSTextInputContext *ctxt = [NSTextInputContext currentInputContext];
+                ctxt != nullptr && [view hasOnlyDeadKeyComposition]) {
             [ctxt discardMarkedText];
             [view cancelComposingText];
+        } else if (m_locale.language() == QLocale::Korean) {
+            // macos' Korean composition is a litte different from
+            // other languages.
+            // When a composition exists in a new focusObject,
+            // it can break a new input
+            // This operation is compatible with current macos'
+            // operation with Korean language in other apps.
+            [ctxt discardMarkedText];
+            [view unmarkText];
         }
     } else {
         m_focusWindow = QGuiApplication::focusWindow();

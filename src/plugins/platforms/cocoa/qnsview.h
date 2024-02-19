@@ -30,6 +30,7 @@ QT_DECLARE_NAMESPACED_OBJC_INTERFACE(QNSView, NSView
 @interface QNSView (ComplexTextAPI)
 - (void)unmarkText;
 - (void)cancelComposingText;
+- (BOOL)hasOnlyDeadKeyComposition;
 @end
 
 Q_FORWARD_DECLARE_OBJC_CLASS(NSColorSpace);

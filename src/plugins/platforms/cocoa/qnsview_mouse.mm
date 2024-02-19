@@ -136,6 +136,16 @@ static const QPointingDevice *pointingDeviceFor(qint64 deviceID)
     QWindowSystemInterface::handleMouseEvent(targetView->m_platformWindow->window(),
                                              timestamp, qtWindowPoint, qtScreenPoint,
                                              m_buttons, button, eventType, modifiers);
+
+    // It happens when the mouse click on the cases
+    // changing focus inside a same focus object.
+    if (!m_composingText.isEmpty() && eventType == QEvent::MouseButtonPress) {
+        auto *focusObject = m_platformWindow->window()->focusObject();
+        if (focusObject == m_composingFocusObject) {
+            [self unmarkText];
+            [NSTextInputContext.currentInputContext discardMarkedText];
+        }
+    }
 }
 
 - (void)handleFrameStrutMouseEvent:(NSEvent *)theEvent
