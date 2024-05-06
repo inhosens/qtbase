@@ -561,13 +561,11 @@ void QWindowsTheme::handleSettingsChanged()
     integration->updateApplicationBadge();
     if (integration->darkModeHandling().testFlag(QWindowsApplication::DarkModeStyle)) {
         QWindowsTheme::instance()->refresh();
-        QWindowSystemInterface::handleThemeChange();
+        QWindowSystemInterface::handleThemeChange<QWindowSystemInterface::SynchronousDelivery>();
     }
     if (colorSchemeChanged) {
-        if (integration->darkModeHandling().testFlag(QWindowsApplication::DarkModeWindowFrames)) {
-            for (QWindowsWindow *w : std::as_const(QWindowsContext::instance()->windows()))
-                w->setDarkBorder(s_colorScheme == Qt::ColorScheme::Dark);
-        }
+        for (QWindowsWindow *w : std::as_const(QWindowsContext::instance()->windows()))
+            w->setDarkBorder(s_colorScheme == Qt::ColorScheme::Dark);
     }
 }
 
